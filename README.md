@@ -1,5 +1,7 @@
 # ZoeFlow
 
+![ZoeFlow Preview](./preview.png)
+
 ZoeFlow is a visual node-based editor for building AI workflows and conversation chains. Create complex interaction flows by connecting nodes in an intuitive graph interface.
 
 Terminology is defined in `documentation/terminology.md`.
