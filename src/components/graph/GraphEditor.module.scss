@@ -1,0 +1,133 @@
+.root {
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  height: 56px;
+  flex: 0 0 auto;
+}
+
+.content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 8px auto;
+}
+
+.canvasHost {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+}
+
+.canvas {
+  min-width: 0;
+  position: relative;
+  height: 100%;
+}
+
+.resizeHandle {
+  width: 8px;
+  cursor: col-resize;
+  position: relative;
+  background: transparent;
+}
+
+.resizeHandle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 2px;
+  height: 100%;
+  background: var(--border);
+  opacity: 0.8;
+}
+
+.sidebar {
+  min-width: 0;
+  background: var(--card);
+  color: var(--card-foreground);
+  display: grid;
+  grid-template-rows: 1fr;
+  min-height: 0;
+}
+
+.reactflow {
+  height: 100%;
+  --xy-node-border-radius: 12px;
+}
+
+.panel {
+  min-height: 0;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.scrollArea {
+  height: 100%;
+  position: relative;
+}
+
+.scrollArea :global(.simplebar-track) {
+  pointer-events: auto;
+}
+
+.reactflow :global(.react-flow__node.zoe-node) {
+  padding: 10px 15px;
+  border-radius: var(
+    --xy-node-border-radius,
+    var(--xy-node-border-radius-default)
+  );
+  width: 150px;
+  font-size: 12px;
+  text-align: center;
+  border: var(--xy-node-border, var(--xy-node-border-default));
+  border-color: var(--border);
+  background-color: var(
+    --xy-node-background-color,
+    var(--xy-node-background-color-default)
+  );
+  color: var(--xy-node-color, var(--xy-node-color-default));
+}
+
+.reactflow :global(.react-flow__node.zoe-node.selectable:hover) {
+  box-shadow: var(
+    --xy-node-boxshadow-hover,
+    var(--xy-node-boxshadow-hover-default)
+  );
+}
+
+.reactflow :global(.react-flow__node.zoe-node.selectable.selected),
+.reactflow :global(.react-flow__node.zoe-node.selectable:focus),
+.reactflow :global(.react-flow__node.zoe-node.selectable:focus-visible) {
+  box-shadow: var(
+    --xy-node-boxshadow-selected,
+    var(--xy-node-boxshadow-selected-default)
+  );
+}
+
+.reactflow :global(.react-flow__handle) {
+  border: unset !important;
+  background: var(--muted-foreground) !important;
+}
+
+.reactflow :global(.react-flow__node.zoe-node.start-node),
+.reactflow :global(.react-flow__node.zoe-node.end-node) {
+  width: max-content;
+  border-color: var(--brand);
+  color: var(--brand-foreground);
+  --zoe-node-meta-title-color: var(--brand-foreground);
+  --zoe-node-subtitle-color: var(--brand-foreground);
+  background-color: var(--brand);
+}
+
+.reactflow :global(.react-flow__edge-textbg) {
+  fill: var(--background);
+}
+
+.reactflow :global(.react-flow__edge-text) {
+  fill: var(--foreground);
+}

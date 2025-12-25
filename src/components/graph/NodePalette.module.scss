@@ -1,0 +1,24 @@
+.categoryHeader {
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.categoryTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  color: var(--muted-foreground);
+}
+
+.categorySeparator {
+  flex: 1;
+  height: 1px;
+  background: color-mix(in oklch, currentColor 35%, transparent);
+}
+
+.categoryTool {
+  color: var(--foreground);
+}

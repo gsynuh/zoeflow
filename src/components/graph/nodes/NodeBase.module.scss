@@ -1,0 +1,61 @@
+@mixin root($defaultOutputCount: 1, $defaultOutputHeight: 15px) {
+  display: grid;
+  gap: 0.25rem;
+  --zoe-output-count: #{$defaultOutputCount};
+  --zoe-output-height: #{$defaultOutputHeight};
+  min-height: calc(var(--zoe-output-count) * var(--zoe-output-height));
+}
+
+@mixin portGroup() {
+  display: contents;
+}
+
+@mixin handleTop() {
+  top: var(--handle-top);
+}
+
+@mixin outputLabel() {
+  position: absolute;
+  top: var(--handle-top);
+  left: calc(100% + 10px);
+  transform: translateY(-50%);
+  font-size: 0.6rem;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@mixin subtitle() {
+  font-size: 0.65rem;
+  color: var(--zoe-node-subtitle-color, var(--foreground));
+  font-weight: 600;
+  opacity: 1;
+}
+
+@mixin simpleTitle() {
+  font-weight: 600;
+}
+
+@mixin metaTitle() {
+  font-weight: 600;
+  font-size: 0.6rem;
+  line-height: 1;
+  color: var(--zoe-node-meta-title-color, var(--muted-foreground));
+  margin-bottom: 0rem;
+}
+
+@mixin externalBadge() {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: none;
+  opacity: 0.35;
+  color: var(--muted-foreground);
+  z-index: 0;
+  pointer-events: none;
+}

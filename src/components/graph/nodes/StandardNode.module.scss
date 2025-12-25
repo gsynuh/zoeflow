@@ -1,0 +1,37 @@
+@use "./NodeBase.module.scss" as nodeBase;
+
+.root {
+  @include nodeBase.root(1);
+}
+
+.port {
+  @include nodeBase.portGroup;
+}
+
+.title {
+  @include nodeBase.metaTitle;
+  z-index: 1;
+}
+
+.subtitle {
+  @include nodeBase.subtitle;
+  z-index: 1;
+}
+
+.handleInput {
+  @include nodeBase.handleTop;
+  z-index: 1;
+}
+
+.handleOutput {
+  @include nodeBase.handleTop;
+  z-index: 1;
+}
+
+.outputLabel {
+  @include nodeBase.outputLabel;
+}
+
+.externalBadge {
+  @include nodeBase.externalBadge;
+}

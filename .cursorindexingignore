@@ -1,0 +1,12 @@
+node_modules
+.vscode
+.cursor
+.continue
+.next
+.audit
+.cache
+
+commands
+
+AGENTS.md
+README.md

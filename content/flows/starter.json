@@ -1,0 +1,351 @@
+{
+  "id": "b84edc27-cc15-42fc-9a33-0faf1c128fe4",
+  "name": "Translate",
+  "createdAt": 1766314666664,
+  "updatedAt": 1766314666664,
+  "canvas": {
+    "nodes": [
+      {
+        "id": "start",
+        "type": "start",
+        "position": {
+          "x": -80,
+          "y": 96
+        },
+        "data": {
+          "type": "start",
+          "title": "Start",
+          "label": "",
+          "defaultUserPrompt": "Describe your request.\n"
+        },
+        "measured": {
+          "width": 54,
+          "height": 38
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "34eb0249-2ca4-4c33-93e9-b555cb2e30b7",
+        "type": "redact",
+        "position": {
+          "x": 0,
+          "y": 80
+        },
+        "data": {
+          "type": "redact",
+          "title": "Redact",
+          "label": "regex emails, api and sdk keys",
+          "redactEmails": true,
+          "redactApiKeys": true,
+          "redactSdkKeys": true,
+          "placeholderFormat": "typed",
+          "replacement": "[REDACTED]"
+        },
+        "measured": {
+          "width": 150,
+          "height": 67
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "9852da62-9792-4a3a-881f-e3879548a645",
+        "type": "guardrails",
+        "position": {
+          "x": 176,
+          "y": 96
+        },
+        "data": {
+          "type": "guardrails",
+          "title": "Guardrails",
+          "label": "All active",
+          "guardrailsHarmToOthers": true,
+          "guardrailsHarmToSelf": true,
+          "guardrailsHarmToSystem": true,
+          "model": "openai/gpt-4o-mini",
+          "temperature": 0
+        },
+        "measured": {
+          "width": 150,
+          "height": 52
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "llm",
+        "type": "completion",
+        "position": {
+          "x": 384,
+          "y": 16
+        },
+        "data": {
+          "type": "completion",
+          "title": "Completion",
+          "label": "Assistant",
+          "model": "openai/gpt-4o-mini",
+          "temperature": 0.4,
+          "includeConversation": true,
+          "traceOutput": true,
+          "systemPrompt": "You are a friendly and helpful assistant.\n",
+          "useTools": false,
+          "toolsJson": "",
+          "toolChoiceJson": ""
+        },
+        "measured": {
+          "width": 150,
+          "height": 51
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "2423ffef-f816-4a3c-bb60-b8b10016a198",
+        "type": "completion",
+        "position": {
+          "x": 384,
+          "y": 112
+        },
+        "data": {
+          "type": "completion",
+          "title": "Completion",
+          "label": "No context response",
+          "model": "openai/gpt-4o-mini",
+          "temperature": 0.4,
+          "includeConversation": false,
+          "traceOutput": true,
+          "systemPrompt": "You are a helpful assistant. (the guardrails show the user message doesn't pass, nudge them back on the right path.)\n",
+          "useTools": false,
+          "toolsJson": "",
+          "toolChoiceJson": ""
+        },
+        "measured": {
+          "width": 150,
+          "height": 51
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "end",
+        "type": "end",
+        "position": {
+          "x": 736,
+          "y": 16
+        },
+        "data": {
+          "type": "end",
+          "title": "End",
+          "label": ""
+        },
+        "measured": {
+          "width": 50,
+          "height": 38
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "3748d098-2acb-46cc-8a58-c7aaaffba836",
+        "type": "end",
+        "position": {
+          "x": 736,
+          "y": 112
+        },
+        "data": {
+          "type": "end",
+          "title": "End",
+          "label": ""
+        },
+        "measured": {
+          "width": 50,
+          "height": 38
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "b280edd5-59de-4960-b284-def0bf07b0fe",
+        "type": "message",
+        "position": {
+          "x": 176,
+          "y": -80
+        },
+        "data": {
+          "type": "message",
+          "title": "Message",
+          "label": "Private user data",
+          "priority": 0,
+          "role": "system",
+          "text": "The user is called Tamsen."
+        },
+        "measured": {
+          "width": 150,
+          "height": 51
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "702a067d-fab7-4c15-9b50-819137009647",
+        "type": "message",
+        "position": {
+          "x": 176,
+          "y": -16
+        },
+        "data": {
+          "type": "message",
+          "title": "Message",
+          "label": "Speak french",
+          "priority": 0,
+          "role": "system",
+          "text": "Reply only in french."
+        },
+        "measured": {
+          "width": 150,
+          "height": 51
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "e79bb065-466e-4454-a475-904f20128db7",
+        "type": "completion",
+        "position": {
+          "x": 560,
+          "y": 16
+        },
+        "data": {
+          "type": "completion",
+          "title": "Completion",
+          "label": "번역하다",
+          "model": "openai/gpt-4o-mini",
+          "temperature": 1,
+          "includeConversation": false,
+          "traceOutput": true,
+          "systemPrompt": "Translate the assistant message to korean.\n",
+          "useTools": false,
+          "toolsJson": "",
+          "toolChoiceJson": ""
+        },
+        "measured": {
+          "width": 150,
+          "height": 51
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "132a41e1-fab6-4b72-b8cc-68ef3467d76b",
+        "type": "message",
+        "position": {
+          "x": 384,
+          "y": -80
+        },
+        "data": {
+          "type": "message",
+          "title": "Message",
+          "label": "Remove identifiable data",
+          "priority": 0,
+          "role": "system",
+          "text": "You are also a data safety agent for the EU.\n\nYour response will anonymize any and all identifiable data.\n\nidentifiable data include names, e-mails, username, nicknames,  adresses and so on.\n\nIts any sentence, word or sequence of words that may lead the reader to 'fingerprint' that person.\n\nThey will either be replaced with the string \"[REDACTED]\" , its language/culture equivalent, or rephrase your response to remove indentifiable data.\n"
+        },
+        "measured": {
+          "width": 150,
+          "height": 51
+        },
+        "selected": false,
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge-75d135d2-c278-4483-85f0-356b16cf8a3f",
+        "source": "start",
+        "sourceHandle": "out",
+        "target": "34eb0249-2ca4-4c33-93e9-b555cb2e30b7",
+        "targetHandle": "in",
+        "animated": true,
+        "selected": false
+      },
+      {
+        "id": "edge-e4cf7286-ace3-400b-be92-d0d784b834e8",
+        "source": "34eb0249-2ca4-4c33-93e9-b555cb2e30b7",
+        "sourceHandle": "out",
+        "target": "9852da62-9792-4a3a-881f-e3879548a645",
+        "targetHandle": "in",
+        "animated": true,
+        "selected": false
+      },
+      {
+        "id": "edge-5d2d71db-161b-4dfe-ba1b-6ec85be941c1",
+        "source": "9852da62-9792-4a3a-881f-e3879548a645",
+        "sourceHandle": "pass",
+        "target": "llm",
+        "targetHandle": "in",
+        "animated": true,
+        "selected": false
+      },
+      {
+        "id": "edge-fcca2ec3-59ef-499a-8fd3-d449e5d70df1",
+        "source": "9852da62-9792-4a3a-881f-e3879548a645",
+        "sourceHandle": "fail",
+        "target": "2423ffef-f816-4a3c-bb60-b8b10016a198",
+        "targetHandle": "in",
+        "animated": true,
+        "selected": false
+      },
+      {
+        "id": "edge-7ce19aab-549f-4694-8037-c7751f9effe3",
+        "source": "2423ffef-f816-4a3c-bb60-b8b10016a198",
+        "sourceHandle": "out",
+        "target": "3748d098-2acb-46cc-8a58-c7aaaffba836",
+        "targetHandle": "in",
+        "animated": true,
+        "selected": false
+      },
+      {
+        "source": "702a067d-fab7-4c15-9b50-819137009647",
+        "sourceHandle": "out",
+        "target": "llm",
+        "targetHandle": "in",
+        "id": "edge-81c31421-501b-4a31-ba16-6ea5a15dfc1f",
+        "animated": true
+      },
+      {
+        "source": "b280edd5-59de-4960-b284-def0bf07b0fe",
+        "sourceHandle": "out",
+        "target": "llm",
+        "targetHandle": "in",
+        "id": "edge-f54d881c-f4a6-469c-9db9-d1e3f3165662",
+        "animated": true
+      },
+      {
+        "source": "e79bb065-466e-4454-a475-904f20128db7",
+        "sourceHandle": "out",
+        "target": "end",
+        "targetHandle": "in",
+        "id": "edge-f3e619a5-6543-47ee-bb8f-ef42cc4e1498",
+        "animated": true,
+        "selected": false
+      },
+      {
+        "source": "llm",
+        "sourceHandle": "out",
+        "target": "e79bb065-466e-4454-a475-904f20128db7",
+        "targetHandle": "in",
+        "id": "edge-6c02884b-cc21-423f-9abc-ed593527a8ab",
+        "animated": true
+      },
+      {
+        "source": "132a41e1-fab6-4b72-b8cc-68ef3467d76b",
+        "sourceHandle": "out",
+        "target": "e79bb065-466e-4454-a475-904f20128db7",
+        "targetHandle": "in",
+        "id": "edge-4f39b5dc-9621-4c0a-a7f7-f516d372c579",
+        "animated": true
+      }
+    ]
+  }
+}

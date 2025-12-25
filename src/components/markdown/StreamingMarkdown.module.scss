@@ -1,0 +1,70 @@
+.root {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.paragraph {
+  margin: 0;
+}
+
+.paragraph + .paragraph {
+  margin-top: 0.75rem;
+}
+
+.paragraph + .list,
+.list + .paragraph {
+  margin-top: 0.75rem;
+}
+
+.hr {
+  border: none;
+  border-top: 1px solid
+    color-mix(in oklch, var(--muted-foreground) 45%, transparent);
+  margin: 0.75rem 0;
+}
+
+.list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.listItem {
+  margin: 0.25rem 0;
+}
+
+.heading {
+  margin: 0;
+  font-weight: 650;
+}
+
+.heading + .paragraph {
+  margin-top: 0.5rem;
+}
+
+.h1 {
+  font-size: 1.05rem;
+}
+
+.h2 {
+  font-size: 1rem;
+}
+
+.h3 {
+  font-size: 0.95rem;
+}
+
+.h4,
+.h5,
+.h6 {
+  font-size: 0.9rem;
+}
+
+.link {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  text-decoration-thickness: 2px;
+}
