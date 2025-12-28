@@ -27,7 +27,7 @@ export async function GET(request: Request) {
         chunkCount: doc.chunkCount,
         uploadedAt: doc.uploadedAt,
         processedAt: doc.processedAt,
-        totalCostUsd: doc.totalCostUsd,
+        totalCost: doc.totalCost,
         totalTokens: doc.totalTokens,
         processingStep: doc.processingStep,
         progress: doc.progress,

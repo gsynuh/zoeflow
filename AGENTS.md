@@ -19,6 +19,10 @@ To be familiar with the project and answer the user, read README.md and its asso
 - NO inline dynamic imports
 - Anticipate error handling with try/catch and clear messages through the relevant channel (server side and client side)
 
+### New features, nodes, using OpenRouter
+
+Ensure all usages of a pay as you go service (here OpenRouter) are properly reported (see usage reporting for Completion nodes or Document processing) via the appropriate events/callbacks/logs.
+
 ### Types and enums
 
 - To facilitate user understanding of the code base and navigation through finding references or string search, use string enums instead of hardcoded strings for "type of things" or "kind of things" where the attribute values are expected to be of a limit number or explicit and different string or int values

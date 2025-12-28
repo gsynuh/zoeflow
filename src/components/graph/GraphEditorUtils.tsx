@@ -443,7 +443,7 @@ function createExecutionCallbacks(
       executingNodeIdByThreadRef.current.set(thread.id, nodeId);
       incrementExecutingNode(nodeId);
     },
-    onAssistantStart: ({ name, variant, nodeId }) => {
+    onAssistantStart: ({ name, variant, nodeId, modelId: overrideModelId }) => {
       // Check if we already have a messageId for this node (to avoid duplicates)
       const existingMessageId = assistantMessageIdByNodeId.get(nodeId);
       if (existingMessageId) {
@@ -451,7 +451,10 @@ function createExecutionCallbacks(
       }
 
       const node = graphNodesById.get(nodeId) ?? null;
-      const modelId = getGraphNodeModelId(node?.data);
+      const modelId =
+        typeof overrideModelId === "string" && overrideModelId.trim()
+          ? overrideModelId.trim()
+          : getGraphNodeModelId(node?.data);
 
       // Only create assistant message bubble for final message-producing nodes
       // For Completion nodes, check if they're the final message-producing node
@@ -491,7 +494,7 @@ function createExecutionCallbacks(
         name,
         nodeId,
         runId,
-        modelId,
+        modelId: modelId ?? undefined,
         variant: chatVariant,
       });
       // Only mark as final assistant message if it's Standard variant (final completion)

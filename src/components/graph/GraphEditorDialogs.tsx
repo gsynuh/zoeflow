@@ -3,6 +3,7 @@
 import { ModelsDialog } from "@/components/graph/ModelsDialog";
 import { RagTestDialog } from "@/components/graph/RagTestDialog";
 import { TypeScriptPreviewDialog } from "@/components/graph/TypeScriptPreviewDialog";
+import { UsageStatsDialog } from "@/components/graph/UsageStatsDialog";
 import { SystemDialogHost } from "@/components/system/SystemDialogHost";
 import { VectorStoreDialog } from "@/components/vectorstores/VectorStoreDialog";
 import {
@@ -18,6 +19,8 @@ type Props = {
   setTypeScriptPreviewOpen: (open: boolean) => void;
   modelsOpen: boolean;
   setModelsOpen: (open: boolean) => void;
+  usageStatsOpen: boolean;
+  setUsageStatsOpen: (open: boolean) => void;
   ragTestOpen: boolean;
   setRagTestOpen: (open: boolean) => void;
   vectorStoreOpen: boolean;
@@ -31,6 +34,8 @@ export function GraphEditorDialogs({
   setTypeScriptPreviewOpen,
   modelsOpen,
   setModelsOpen,
+  usageStatsOpen,
+  setUsageStatsOpen,
   ragTestOpen,
   setRagTestOpen,
   vectorStoreOpen,
@@ -46,6 +51,10 @@ export function GraphEditorDialogs({
         graph={previewGraph}
       />
       <ModelsDialog open={modelsOpen} onOpenChange={setModelsOpen} />
+      <UsageStatsDialog
+        open={usageStatsOpen}
+        onOpenChange={setUsageStatsOpen}
+      />
       <VectorStoreDialog
         open={vectorStoreOpen}
         onOpenChange={setVectorStoreOpen}

@@ -47,7 +47,6 @@ import {
 } from "@/zoeflow/adapters/reactflow";
 import { executeGraph } from "@/zoeflow/engine/execute";
 import type { ZoeExecutionState } from "@/zoeflow/engine/types";
-import { estimateUsdCost } from "@/zoeflow/openrouter/pricing";
 import { useOpenRouterModelsById } from "@/zoeflow/openrouter/useOpenRouterModels";
 import { getNodeDefinition } from "@/zoeflow/registry";
 import {
@@ -96,6 +95,7 @@ export function GraphEditorLayout() {
   );
   const [typeScriptPreviewOpen, setTypeScriptPreviewOpen] = useState(false);
   const [modelsOpen, setModelsOpen] = useState(false);
+  const [usageStatsOpen, setUsageStatsOpen] = useState(false);
   const [ragTestOpen, setRagTestOpen] = useState(false);
   const [vectorStoresOpen, setVectorStoresOpen] = useState(false);
   const [executingNodeCounts, setExecutingNodeCounts] = useState<
@@ -274,39 +274,21 @@ export function GraphEditorLayout() {
     return model?.context_length ?? null;
   }, [activeThreadModelId, openRouterModelsById]);
 
-  const activeThreadEstimatedCostUsd = useMemo(() => {
+  const activeThreadCost = useMemo(() => {
     if (!activeThread) return 0;
 
-    // Accumulate costs from ALL API calls across all runs in the thread
-    // Count all messages with usage data (completions, guardrails, tool follow-ups, etc.)
     return activeThread.messages
       .filter(
         (message) =>
           message.variant !== ChatMessageVariant.Trace &&
           message.role !== ChatRole.App &&
-          message.usage, // Only count messages with actual API usage data
+          message.usage,
       )
       .reduce((sum, message) => {
-        const modelId = message.modelId ?? activeThreadModelId ?? undefined;
-        if (!modelId) return sum;
-
-        const pricing = openRouterModelsById[modelId]?.pricing;
-        if (message.usage) {
-          // Accumulate costs from all API calls: input (prompt) + output (completion) tokens
-          const prompt =
-            estimateUsdCost(message.usage.promptTokens, pricing, "prompt") ?? 0;
-          const completion =
-            estimateUsdCost(
-              message.usage.completionTokens,
-              pricing,
-              "completion",
-            ) ?? 0;
-          return sum + prompt + completion;
-        }
-
-        return sum;
+        const cost = message.usage?.cost ?? 0;
+        return sum + cost;
       }, 0);
-  }, [activeThread, activeThreadModelId, openRouterModelsById]);
+  }, [activeThread]);
 
   const chatPanelThreads = useMemo(() => {
     const nodesById = new Map(nodes.map((node) => [node.id, node]));
@@ -934,6 +916,8 @@ export function GraphEditorLayout() {
         setTypeScriptPreviewOpen={setTypeScriptPreviewOpen}
         modelsOpen={modelsOpen}
         setModelsOpen={setModelsOpen}
+        usageStatsOpen={usageStatsOpen}
+        setUsageStatsOpen={setUsageStatsOpen}
         ragTestOpen={ragTestOpen}
         setRagTestOpen={setRagTestOpen}
         vectorStoreOpen={vectorStoresOpen}
@@ -962,6 +946,7 @@ export function GraphEditorLayout() {
         onOpenTypeScriptPreview={() => setTypeScriptPreviewOpen(true)}
         onOpenVectorStore={() => setVectorStoresOpen(true)}
         onOpenModels={() => setModelsOpen(true)}
+        onOpenUsageStats={() => setUsageStatsOpen(true)}
       />
 
       <div className={styles.content}>
@@ -1028,12 +1013,10 @@ export function GraphEditorLayout() {
             <ChatPanel
               threads={chatPanelThreads}
               activeThreadId={resolvedActiveThreadId ?? ""}
-              modelsById={openRouterModelsById}
-              fallbackModelId={activeThreadModelId}
               composerStats={{
                 contextTokens: activeThreadContextTokens,
                 contextMaxTokens: activeThreadContextMaxTokens,
-                threadCostUsd: activeThreadEstimatedCostUsd,
+                threadCost: activeThreadCost,
                 promptTokens: activeThreadPromptTokens,
                 completionTokens: activeThreadCompletionTokens,
               }}

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { formatCost } from "@/lib/format";
 import { $themeMode } from "@/stores/theme";
 import { DocumentChunksDrawer } from "./DocumentChunksDrawer";
 
@@ -46,7 +47,7 @@ type DocumentInfo = {
   chunkCount?: number;
   uploadedAt: number;
   processedAt?: number;
-  totalCostUsd?: number;
+  totalCost?: number;
   totalTokens?: number;
   processingStep?:
     | "normalizing"
@@ -779,8 +780,8 @@ export function VectorStoreManager() {
                             {doc.totalTokens !== undefined && (
                               <> · {doc.totalTokens.toLocaleString()} tokens</>
                             )}
-                            {doc.totalCostUsd !== undefined && (
-                              <> · ${doc.totalCostUsd.toFixed(4)} USD</>
+                            {doc.totalCost !== undefined && (
+                              <> · {formatCost(doc.totalCost)}</>
                             )}
                             {doc.status === "processing" && <> · </>}
                           </div>

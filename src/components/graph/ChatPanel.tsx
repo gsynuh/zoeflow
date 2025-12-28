@@ -7,10 +7,8 @@ import SimpleBar from "simplebar-react";
 import { StreamingMarkdown } from "@/components/markdown/StreamingMarkdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { formatNumber, formatUsd } from "@/lib/format";
+import { formatCost, formatNumber } from "@/lib/format";
 import { ChatMessageVariant, ChatRole, type ChatMessage } from "@/stores/chat";
-import type { OpenRouterModel } from "@/zoeflow/openrouter/models";
-import { estimateUsdCost } from "@/zoeflow/openrouter/pricing";
 import {
   BugIcon,
   BugOffIcon,
@@ -25,12 +23,10 @@ import styles from "./ChatPanel.module.scss";
 export type ChatPanelProps = {
   threads: ChatPanelThread[];
   activeThreadId: string;
-  modelsById?: Record<string, OpenRouterModel>;
-  fallbackModelId?: string | null;
   composerStats?: {
     contextTokens: number;
     contextMaxTokens: number | null;
-    threadCostUsd: number; // Cost per thread (accumulated from all API calls across all runs)
+    threadCost: number; // Cost per thread (accumulated from all API calls across all runs)
     promptTokens: number; // Accumulated input tokens across all API calls
     completionTokens: number; // Accumulated output tokens across all API calls
   };
@@ -63,8 +59,6 @@ export type ChatPanelThread = {
 export function ChatPanel({
   threads,
   activeThreadId,
-  modelsById,
-  fallbackModelId,
   composerStats,
   onSelectThread,
   onRemoveThread,
@@ -150,8 +144,8 @@ export function ChatPanel({
         if (percentage !== null) {
           parts.push(`${percentage.toFixed(1)}%`);
         }
-        if (composerStats.threadCostUsd > 0) {
-          parts.push(`~${formatUsd(composerStats.threadCostUsd)}`);
+        if (composerStats.threadCost > 0) {
+          parts.push(`${formatCost(composerStats.threadCost)}`);
         }
         return parts.length > 0 ? parts.join(" · ") : null;
       })()
@@ -298,8 +292,6 @@ export function ChatPanel({
                     threadId={activeThread?.id ?? ""}
                     message={message}
                     isStreaming={message.id === streamingAssistantMessageId}
-                    modelsById={modelsById}
-                    fallbackModelId={fallbackModelId}
                     onEditMessage={onEditMessage}
                     onDeleteMessage={onDeleteMessage}
                   />
@@ -379,47 +371,24 @@ type ChatMessageRowProps = {
   threadId: string;
   message: ChatMessage;
   isStreaming: boolean;
-  modelsById?: Record<string, OpenRouterModel>;
-  fallbackModelId?: string | null;
   onEditMessage: (threadId: string, messageId: string, content: string) => void;
   onDeleteMessage: (threadId: string, messageId: string) => void;
 };
 
 /**
- * Estimate a message's USD cost based on its role, estimated token count, and model pricing.
- * Only calculates costs for assistant messages (user messages don't have costs).
+ * Resolve a message's OpenRouter cost.
  *
  * @param message - Chat message to estimate.
- * @param modelsById - OpenRouter models index.
- * @param fallbackModelId - Default model id used for prompt pricing.
  */
-function estimateMessageCostUsd(
-  message: ChatMessage,
-  modelsById: Record<string, OpenRouterModel> | undefined,
-  fallbackModelId: string | null | undefined,
-) {
-  if (!modelsById) return null;
+function getMessageCost(message: ChatMessage) {
   if (message.variant === ChatMessageVariant.Trace) return null;
   if (message.role === ChatRole.App) return null;
   // User messages don't have costs
   if (message.role === ChatRole.User) return null;
 
   const usage = message.usage;
-  const modelId = message.modelId ?? fallbackModelId ?? undefined;
-  if (!modelId) return null;
-
-  const pricing = modelsById[modelId]?.pricing;
-  if (usage) {
-    // Calculate cost for both input (prompt) and output (completion) tokens
-    const prompt = estimateUsdCost(usage.promptTokens, pricing, "prompt") ?? 0;
-    const completion =
-      estimateUsdCost(usage.completionTokens, pricing, "completion") ?? 0;
-    return prompt + completion;
-  }
-
-  // Fallback: estimate completion cost if no usage data
-  const tokenCount = message.tokenCount ?? 0;
-  return estimateUsdCost(tokenCount, pricing, "completion");
+  if (!usage) return null;
+  return typeof usage.cost === "number" ? usage.cost : null;
 }
 
 /**
@@ -429,8 +398,6 @@ function ChatMessageRow({
   threadId,
   message,
   isStreaming,
-  modelsById,
-  fallbackModelId,
   onEditMessage,
   onDeleteMessage,
 }: ChatMessageRowProps) {
@@ -503,11 +470,7 @@ function ChatMessageRow({
     message.role === ChatRole.Assistant
       ? (() => {
           const usage = message.usage;
-          const cost = estimateMessageCostUsd(
-            message,
-            modelsById,
-            fallbackModelId,
-          );
+          const cost = getMessageCost(message);
           const parts: string[] = [];
           if (usage) {
             // Show input and output tokens separately
@@ -529,7 +492,7 @@ function ChatMessageRow({
             }
           }
           if (cost !== null && cost > 0) {
-            parts.push(`~${formatUsd(cost)}`);
+            parts.push(`${formatCost(cost)}`);
           }
           return parts.length > 0 ? parts.join(" · ") : null;
         })()
@@ -559,7 +522,7 @@ function ChatMessageRow({
               {usageLabel ? (
                 <span
                   className={styles.messageUsage}
-                  title="Token counts include formatting overhead (role markers, message boundaries). This matches what you're billed by OpenRouter/OpenAI."
+                  title="Token counts match OpenRouter accounting (include formatting overhead). Costs are reported by OpenRouter."
                 >
                   {usageLabel}
                 </span>

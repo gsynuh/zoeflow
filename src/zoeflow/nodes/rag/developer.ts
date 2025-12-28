@@ -207,6 +207,15 @@ export const RAG_SEARCH_TOOL: ZoeDeveloperToolDefinition = {
         score: number; // RRF score for ranking
         similarityScore?: number; // Original similarity score for filtering
       }>;
+      embedding?: {
+        model?: string;
+        usage?: {
+          prompt_tokens?: number;
+          total_tokens?: number;
+          cost?: number;
+          cost_details?: { upstream_inference_cost?: number };
+        } | null;
+      };
     };
 
     const results = Array.isArray(data.results) ? data.results : [];
@@ -270,6 +279,23 @@ export const RAG_SEARCH_TOOL: ZoeDeveloperToolDefinition = {
     return {
       message: formattedResults,
       value: { queries, results: resultsWithCitations },
+      usage: data.embedding?.usage
+        ? {
+            promptTokens: data.embedding.usage.prompt_tokens ?? 0,
+            completionTokens: 0,
+            totalTokens:
+              data.embedding.usage.total_tokens ??
+              data.embedding.usage.prompt_tokens ??
+              0,
+            cost: data.embedding.usage.cost,
+            upstreamCost:
+              data.embedding.usage.cost_details?.upstream_inference_cost,
+          }
+        : undefined,
+      usageModel:
+        typeof data.embedding?.model === "string"
+          ? data.embedding.model
+          : model,
     };
   },
 };

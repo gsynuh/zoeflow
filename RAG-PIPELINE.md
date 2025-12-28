@@ -20,10 +20,12 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
 **Entry Point**: `POST /api/v1/vectorstore/documents/start`
 
 ### 2.1 Normalization
+
 - Line ending normalization (`\r\n` → `\n`, `\r` → `\n`)
 - Trailing whitespace removal per line
 
 ### 2.2 Section Parsing
+
 **Function**: `parseMarkdownSections()`
 
 - Parses markdown headings (`#` through `######`) to create hierarchical sections
@@ -32,6 +34,7 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
 - Falls back to single "Document" section if no headings found
 
 ### 2.3 Chunking Strategy
+
 **Function**: `splitIntoChunks()`
 
 - **Target size**: 500 tokens (configurable, defaults to OpenAI `cl100k_base` tokenizer)
@@ -44,6 +47,7 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
 - Each chunk includes metadata: `startLine`, `endLine`, `startChar`, `endChar`, `headingPath`
 
 ### 2.4 Chunk Enrichment (Optional)
+
 **Condition**: Enabled via `ZOEFLOW_LLM_AUGMENTED_CHUNKING=1`
 
 - Uses LLM (`OPENROUTER_CHUNK_ENRICHMENT_MODEL`) to generate semantically-enhanced text
@@ -53,6 +57,7 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
 - **Critical distinction**: Enriched text is used ONLY for embedding generation, NOT for LLM consumption
 
 ### 2.5 Embedding Generation
+
 **Endpoint**: `POST /api/v1/embedding` (proxies to OpenRouter)
 
 - **Model**: Configurable via `OPENROUTER_EMBEDDING_MODEL` (default: `text-embedding-3-small`)
@@ -61,12 +66,13 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
 - **Text used for embedding** (variable based on active flags):
 
   **Default format** (when `ZOEFLOW_LLM_AUGMENTED_CHUNKING` disabled):
+
   ```
   source: {sourceUri}
   doc_id: {docId}
   version: {version}
   section: {headingPath.join(" / ")}
-  
+
   {chunkText}
   ```
 
@@ -79,6 +85,7 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
   - **Purpose**: Improve semantic search quality; NOT returned to LLM
 
 ### 2.6 Vector Store Indexing
+
 - Deletes previous version chunks for the document (if reprocessing)
 - Upserts into vector store (HNSW-based similarity search):
   - **`text` field**: Raw chunk text (what LLM sees during retrieval)
@@ -92,6 +99,7 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
 ## 3. RAG Retrieval
 
 ### 3.1 Query Processing
+
 **Node**: RAG node (provides `rag_search` tool to Completion nodes)
 
 - Completion node collects RAG contributions from connected RAG nodes
@@ -99,6 +107,7 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
 - LLM generates multiple natural-language queries (1–5, configurable `maxQueries`)
 
 ### 3.2 Multi-Query Vector Search
+
 **Endpoint**: `POST /api/v1/vectorstore/query-many`
 
 - Accepts array of queries
@@ -110,6 +119,7 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
   - Preserves original similarity scores for filtering (`minScore` threshold)
 
 ### 3.3 Result Formatting
+
 - Returns deduplicated results sorted by RRF score
 - Each result includes: `id`, `text` (raw chunk text), `score` (RRF), `similarityScore` (original), `metadata`
 - Metadata contains: `doc_id`, `version`, `source_uri`, `heading_path`, `start_line`, `end_line`
@@ -118,11 +128,13 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
 ## 4. Context Integration
 
 ### 4.1 RAG Node Contribution
+
 - RAG node provides `rag_search` tool to Completion node
 - Query guidance injected as system message (priority: -50)
 - Tool results formatted as context messages with citations
 
 ### 4.2 Completion Node Execution
+
 **Function**: `executeCompletionNode()`
 
 - Collects RAG contributions via `collectRagInputContributions()`
@@ -164,6 +176,7 @@ ZoeFlow implements a document-based RAG pipeline with markdown-aware processing,
 ### How It Works
 
 When `ZOEFLOW_LLM_AUGMENTED_CHUNKING=1`:
+
 1. **Enrichment phase**: LLM generates summary, possible queries, and semantic metadata for each chunk
 2. **Embedding phase**: Enriched text (not raw text) is embedded to create the vector
 3. **Storage phase**: Raw chunk text is stored in `text` field; enriched text stored in `metadata.vectorized_text`
@@ -173,6 +186,7 @@ When `ZOEFLOW_LLM_AUGMENTED_CHUNKING=1`:
 ### Why This Design?
 
 **Pros:**
+
 - **Better semantic search**: LLM-generated summaries/queries improve embedding quality and retrieval precision
 - **Preserves accuracy**: LLM sees original content without potential hallucinations from enrichment LLM
 - **No bias injection**: Enrichment artifacts don't contaminate the content the LLM processes
@@ -180,6 +194,7 @@ When `ZOEFLOW_LLM_AUGMENTED_CHUNKING=1`:
 - **Debuggable**: Enriched text stored in metadata for analysis/comparison
 
 **Cons:**
+
 - **Additional cost**: Requires LLM calls during indexing (mitigated by caching)
 - **Processing latency**: Enrichment adds time to document processing pipeline
 - **Potential mismatch**: Enriched text used for search may not perfectly align with raw content semantics
@@ -189,8 +204,8 @@ When `ZOEFLOW_LLM_AUGMENTED_CHUNKING=1`:
 ### Trade-offs
 
 This approach prioritizes **retrieval quality** (via enriched embeddings) while maintaining **content fidelity** (via raw text consumption). It's suitable when:
+
 - Documents benefit from semantic summarization for search
 - Original content accuracy is critical
 - Processing cost/latency is acceptable
 - Retrieval precision matters more than indexing speed
-

@@ -38,6 +38,8 @@ export async function GET(request: Request) {
         uploadedAt: metadata.uploadedAt,
         processedAt: metadata.processedAt,
         error: metadata.error,
+        totalCost: metadata.totalCost,
+        totalTokens: metadata.totalTokens,
       });
     }
 
@@ -63,7 +65,7 @@ export async function GET(request: Request) {
         processingStep: doc.processingStep,
         progress: doc.progress,
         error: doc.error,
-        totalCostUsd: doc.totalCostUsd,
+        totalCost: doc.totalCost,
         totalTokens: doc.totalTokens,
       })),
     });

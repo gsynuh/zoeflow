@@ -2,6 +2,7 @@ import type {
   OpenRouterCompletionRequest,
   OpenRouterCompletionResponse,
 } from "@/zoeflow/openrouter/types";
+import { withOpenRouterUsageAccounting } from "@/zoeflow/openrouter/usage";
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -16,9 +17,10 @@ export async function requestOpenRouterCompletion(
   payload: OpenRouterCompletionRequest,
   options?: OpenRouterRequestOptions,
 ): Promise<OpenRouterCompletionResponse> {
+  const normalizedPayload = withOpenRouterUsageAccounting(payload);
   const response = await fetch(
     OPENROUTER_API_URL,
-    buildOpenRouterRequest(payload, options),
+    buildOpenRouterRequest(normalizedPayload, options),
   );
 
   if (!response.ok) {
@@ -36,9 +38,10 @@ export async function requestOpenRouterCompletionStream(
   payload: OpenRouterCompletionRequest,
   options?: OpenRouterRequestOptions,
 ): Promise<Response> {
+  const normalizedPayload = withOpenRouterUsageAccounting(payload);
   const response = await fetch(
     OPENROUTER_API_URL,
-    buildOpenRouterRequest(payload, options),
+    buildOpenRouterRequest(normalizedPayload, options),
   );
 
   if (!response.ok) {

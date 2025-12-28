@@ -22,6 +22,7 @@ import type {
   OpenRouterToolCall,
   OpenRouterToolChoice,
 } from "@/zoeflow/openrouter/types";
+import { normalizeOpenRouterUsage } from "@/zoeflow/openrouter/usage";
 import { ZoeLLMRole, type ZoeGuardrailsNodeData } from "@/zoeflow/types";
 
 import baseInstructions from "@/content/nodes/guardrails/base.md";
@@ -80,6 +81,7 @@ export async function executeGuardrailsNode(
     name: assistantName,
     variant: ZoeAssistantVariant.Internal,
     nodeId: context.node.id,
+    modelId: GUARDRAILS_MODEL,
   });
 
   const userPrompt = toUserMessage(context.state.payload);
@@ -113,10 +115,12 @@ export async function executeGuardrailsNode(
     assistantReason || toolReason || "Request blocked by guardrails.";
   const reasonForContext = assistantReason || toolReason;
 
-  const usage = estimateGuardrailsUsage({
-    request: payload,
-    responseMessage: message,
-  });
+  const usage =
+    normalizeOpenRouterUsage(responseData.usage) ??
+    estimateGuardrailsUsage({
+      request: payload,
+      responseMessage: message,
+    });
   context.runtime.callbacks.onAssistantUsage?.(messageId, usage);
 
   context.runtime.callbacks.onTrace(

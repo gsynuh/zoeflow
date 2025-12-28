@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 
 import { requestOpenRouterEmbeddings } from "@/zoeflow/openrouter/embeddings";
 import type { OpenRouterEmbeddingsResponse } from "@/zoeflow/openrouter/embeddingsTypes";
+import { buildEmbeddingUsageEvent } from "@/zoeflow/stats/openrouterUsage";
+import { UsageEventSource } from "@/zoeflow/stats/types";
+import { recordUsageEvent } from "@/zoeflow/stats/usageLedger";
 import { createVectorStore } from "@/zoeflow/vectorstore";
 import { QueryCache } from "@/zoeflow/vectorstore/cache";
 import type { VectorStoreQueryResult } from "@/zoeflow/vectorstore/types";
@@ -69,6 +72,7 @@ export async function POST(request: Request) {
     });
 
     let embeddings: number[][] = [];
+    let embeddingUsage: OpenRouterEmbeddingsResponse["usage"] | null = null;
 
     // If all cached, use cached results
     if (cacheMissQueries.length === 0) {
@@ -86,6 +90,18 @@ export async function POST(request: Request) {
           },
           { signal: controller.signal },
         );
+      embeddingUsage = embeddingResponse.usage ?? null;
+      const event = embeddingUsage
+        ? buildEmbeddingUsageEvent({
+            source: UsageEventSource.EmbeddingsProxy,
+            model,
+            usage: embeddingUsage,
+            meta: { route: "/api/v1/vectorstore/query-many" },
+          })
+        : null;
+      if (event) {
+        await recordUsageEvent(event);
+      }
 
       const fetchedEmbeddings: number[][] = Array.isArray(
         embeddingResponse.data,
@@ -138,6 +154,10 @@ export async function POST(request: Request) {
       storeId: store.storeId,
       queries,
       results: rrfResults,
+      embedding: {
+        model,
+        usage: embeddingUsage,
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

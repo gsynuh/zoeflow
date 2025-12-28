@@ -48,6 +48,9 @@ export type OpenRouterCompletionRequest = {
   stream?: boolean;
   tools?: OpenRouterTool[];
   tool_choice?: OpenRouterToolChoice;
+  usage?: {
+    include: boolean;
+  };
 };
 
 export type OpenRouterCompletionChoice = {
@@ -58,6 +61,13 @@ export type OpenRouterUsage = {
   prompt_tokens?: number;
   completion_tokens?: number;
   total_tokens?: number;
+  completion_tokens_details?: {
+    reasoning_tokens?: number;
+  };
+  cost?: number;
+  cost_details?: {
+    upstream_inference_cost?: number;
+  };
 };
 
 export type OpenRouterCompletionResponse = {

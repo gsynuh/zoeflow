@@ -31,6 +31,7 @@ import type {
   OpenRouterToolChoice,
   OpenRouterUsage,
 } from "@/zoeflow/openrouter/types";
+import { normalizeOpenRouterUsage } from "@/zoeflow/openrouter/usage";
 import {
   ZoeLLMRole,
   ZoeNodeID,
@@ -283,16 +284,9 @@ export async function executeCompletionNode(
     usage: OpenRouterUsage | undefined,
     messageId: string,
   ): void => {
-    if (!usage) return;
-
-    const usageData = {
-      promptTokens: usage.prompt_tokens ?? 0,
-      completionTokens: usage.completion_tokens ?? 0,
-      totalTokens: usage.total_tokens ?? 0,
-    };
-    if (context.runtime.callbacks.onAssistantUsage) {
-      context.runtime.callbacks.onAssistantUsage(messageId, usageData);
-    }
+    const usageData = normalizeOpenRouterUsage(usage);
+    if (!usageData) return;
+    context.runtime.callbacks.onAssistantUsage?.(messageId, usageData);
   };
 
   if (!initialInputs.enableTools) {
@@ -308,6 +302,7 @@ export async function executeCompletionNode(
       name: assistantName,
       variant: ZoeAssistantVariant.Standard,
       nodeId: context.node.id,
+      modelId: data.model,
     });
 
     const payload: OpenRouterCompletionRequest = {
@@ -437,6 +432,7 @@ export async function executeCompletionNode(
             name: assistantName,
             variant: ZoeAssistantVariant.Standard,
             nodeId: context.node.id,
+            modelId: data.model,
           });
         }
         accumulatedContent = content.trim();
@@ -463,6 +459,7 @@ export async function executeCompletionNode(
             name: assistantName,
             variant: ZoeAssistantVariant.Standard,
             nodeId: context.node.id,
+            modelId: data.model,
           });
         }
         accumulatedContent = content;
@@ -482,6 +479,7 @@ export async function executeCompletionNode(
           name: assistantName,
           variant: ZoeAssistantVariant.Standard,
           nodeId: context.node.id,
+          modelId: data.model,
         });
       }
       accumulatedContent = content;
@@ -490,19 +488,12 @@ export async function executeCompletionNode(
 
     // Report usage (internal for tool calls, standard for final content)
     if (usage) {
-      const usageMessageId =
-        toolCalls.length > 0
-          ? context.runtime.callbacks.onAssistantStart({
-              name: assistantName,
-              variant: ZoeAssistantVariant.Internal,
-              nodeId: context.node.id,
-            })
-          : (finalMessageId ??
-            context.runtime.callbacks.onAssistantStart({
-              name: assistantName,
-              variant: ZoeAssistantVariant.Standard,
-              nodeId: context.node.id,
-            }));
+      const usageMessageId = context.runtime.callbacks.onAssistantStart({
+        name: assistantName,
+        variant: ZoeAssistantVariant.Internal,
+        nodeId: `${context.node.id}-usage-${iteration + 1}`,
+        modelId: data.model,
+      });
       reportUsage(usage, usageMessageId);
     }
 
@@ -610,6 +601,19 @@ export async function executeCompletionNode(
             arguments: parsedArguments,
           },
         });
+      }
+
+      if (result.usage) {
+        const usageMessageId = context.runtime.callbacks.onAssistantStart({
+          name: tool.definition.label,
+          variant: ZoeAssistantVariant.Internal,
+          nodeId: `${tool.nodeId}-usage-${iteration + 1}-${index + 1}`,
+          modelId: result.usageModel,
+        });
+        context.runtime.callbacks.onAssistantUsage?.(
+          usageMessageId,
+          result.usage,
+        );
       }
 
       // For RAG search, use the formatted message for chat display

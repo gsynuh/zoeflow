@@ -8,13 +8,19 @@ const DEFAULT_METADATA_DIR = path.join(
   "_metadata",
 );
 
+export enum ProcessingUsageOperation {
+  Embedding = "embedding",
+  Completion = "completion",
+}
+
 export type ProcessingUsage = {
   model: string;
-  operation: "embedding" | "completion";
+  operation: ProcessingUsageOperation;
   promptTokens?: number;
   completionTokens?: number;
   totalTokens?: number;
-  costUsd?: number;
+  cost?: number;
+  upstreamCost?: number;
   timestamp: number;
 };
 
@@ -51,7 +57,7 @@ export type DocumentMetadata = {
   processedAt?: number;
   error?: string;
   usage?: ProcessingUsage[];
-  totalCostUsd?: number;
+  totalCost?: number;
   totalTokens?: number;
   processingStep?: ProcessingStep;
   progress?: {

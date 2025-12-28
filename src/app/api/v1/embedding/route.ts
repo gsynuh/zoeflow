@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 
 import { requestOpenRouterEmbeddings } from "@/zoeflow/openrouter/embeddings";
 import type { OpenRouterEmbeddingsRequest } from "@/zoeflow/openrouter/embeddingsTypes";
+import { buildEmbeddingUsageEvent } from "@/zoeflow/stats/openrouterUsage";
+import { UsageEventSource } from "@/zoeflow/stats/types";
+import { recordUsageEvent } from "@/zoeflow/stats/usageLedger";
 import { VectorStoreCache } from "@/zoeflow/vectorstore";
 
 export const runtime = "nodejs";
@@ -80,6 +83,18 @@ export async function POST(request: Request) {
       },
       { signal: controller.signal },
     );
+    const usage = response.usage ?? null;
+    const event = usage
+      ? buildEmbeddingUsageEvent({
+          source: UsageEventSource.EmbeddingsProxy,
+          model,
+          usage,
+          meta: { route: "/api/v1/embedding" },
+        })
+      : null;
+    if (event) {
+      await recordUsageEvent(event);
+    }
 
     // Cache the new embeddings
     const responseData = Array.isArray(response.data) ? response.data : [];

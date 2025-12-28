@@ -1,5 +1,6 @@
 export { VectorStoreCache } from "@/zoeflow/vectorstore/cache";
 export {
+  ProcessingUsageOperation,
   deleteDocumentMetadata,
   listDocumentMetadata,
   readDocumentMetadata,

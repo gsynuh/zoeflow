@@ -32,3 +32,27 @@ export function formatUsd(value: number) {
     maximumFractionDigits: 4,
   }).format(value);
 }
+
+/**
+ * Format OpenRouter cost amounts with compact precision.
+ *
+ * @param value - Cost amount.
+ */
+export function formatCost(value: number) {
+  if (!Number.isFinite(value)) return "$0";
+  if (value === 0) return "$0";
+  if (Math.abs(value) < 0.01) {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 6,
+    }).format(value);
+  }
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  }).format(value);
+}

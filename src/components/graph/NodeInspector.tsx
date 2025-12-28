@@ -63,7 +63,11 @@ export function NodeInspector({
   const isRagNode = node.data.type === ZoeNodeID.Rag;
 
   return (
-    <div className="mt-4 grid gap-4 mb-5">
+    <div className="grid gap-4 mb-5">
+      <div className="grid gap-1 pb-2 border-b">
+        <div className="text-l font-semibold">{node.data.title} node</div>
+      </div>
+
       {isRagNode && onTestRag && (
         <div>
           <Button

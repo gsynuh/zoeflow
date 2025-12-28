@@ -16,5 +16,9 @@ export type OpenRouterEmbeddingsResponse = {
   usage?: {
     prompt_tokens?: number;
     total_tokens?: number;
+    cost?: number;
+    cost_details?: {
+      upstream_inference_cost?: number;
+    };
   };
 };

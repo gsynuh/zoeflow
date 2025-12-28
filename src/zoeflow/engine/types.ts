@@ -23,6 +23,8 @@ export type ZoeAssistantUsage = {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  cost?: number;
+  upstreamCost?: number;
 };
 
 export type ZoeRunCallbacks = {
@@ -37,6 +39,7 @@ export type ZoeRunCallbacks = {
     name: string;
     variant: ZoeAssistantVariant;
     nodeId: string;
+    modelId?: string;
   }) => string;
   onAssistantUpdate: (messageId: string, content: string) => void;
   onAssistantUsage?: (messageId: string, usage: ZoeAssistantUsage) => void;

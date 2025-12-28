@@ -37,5 +37,7 @@ export type ZoeDeveloperToolDefinition = {
   execute: (input: ZoeDeveloperToolExecuteInput) => Promise<{
     message: string;
     value?: unknown;
+    usage?: import("@/zoeflow/engine/types").ZoeAssistantUsage;
+    usageModel?: string;
   }>;
 };

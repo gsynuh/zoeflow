@@ -2,13 +2,19 @@ import { encodingForModel, getEncoding } from "js-tiktoken";
 
 import { requestOpenRouterEmbeddings } from "@/zoeflow/openrouter/embeddings";
 import type { OpenRouterEmbeddingsResponse } from "@/zoeflow/openrouter/embeddingsTypes";
-import type { OpenRouterModel } from "@/zoeflow/openrouter/models";
-import { getUsdPerToken } from "@/zoeflow/openrouter/pricing";
+import type { OpenRouterUsage } from "@/zoeflow/openrouter/types";
+import {
+  buildCompletionUsageEvent,
+  buildEmbeddingUsageEvent,
+} from "@/zoeflow/stats/openrouterUsage";
+import { UsageEventSource } from "@/zoeflow/stats/types";
+import { recordUsageEvent } from "@/zoeflow/stats/usageLedger";
 import { VectorStoreCache } from "@/zoeflow/vectorstore/cache";
 import { enrichChunkForEmbedding } from "@/zoeflow/vectorstore/chunkEnrichment";
 import { ChunkEnrichmentCache } from "@/zoeflow/vectorstore/chunkEnrichmentCache";
 import { ChunkVariant } from "@/zoeflow/vectorstore/chunkVariant";
 import {
+  ProcessingUsageOperation,
   readDocumentMetadata,
   updateDocumentStatus,
   type ProcessingUsage,
@@ -29,6 +35,29 @@ type Chunk = {
   language?: string;
   parentId?: string;
 };
+
+/**
+ * Build a processing usage entry from an OpenRouter usage payload.
+ *
+ * @param input - Usage snapshot input.
+ */
+function buildProcessingUsage(input: {
+  model: string;
+  operation: ProcessingUsageOperation;
+  usage: OpenRouterUsage | undefined;
+}): ProcessingUsage | null {
+  if (!input.usage) return null;
+  return {
+    model: input.model,
+    operation: input.operation,
+    promptTokens: input.usage.prompt_tokens,
+    completionTokens: input.usage.completion_tokens,
+    totalTokens: input.usage.total_tokens,
+    cost: input.usage.cost,
+    upstreamCost: input.usage.cost_details?.upstream_inference_cost,
+    timestamp: Date.now(),
+  };
+}
 
 /**
  * Parse markdown into sections based on headings.
@@ -759,20 +788,43 @@ export async function processMarkdownDocument(
         }),
       );
 
+      const statsWrites: Array<Promise<void>> = [];
+
       enriched.forEach((result, idx) => {
         embeddedTexts[batchStart + idx] = result.embeddedText;
 
-        if (result.usage) {
-          usageEntries.push({
-            model: enrichmentModel,
-            operation: "completion",
-            promptTokens: result.usage.prompt_tokens,
-            completionTokens: result.usage.completion_tokens,
-            totalTokens: result.usage.total_tokens,
-            timestamp: Date.now(),
-          });
+        const usageEntry = buildProcessingUsage({
+          model: enrichmentModel,
+          operation: ProcessingUsageOperation.Completion,
+          usage: result.usage,
+        });
+        if (usageEntry) {
+          usageEntries.push(usageEntry);
+          if (typeof usageEntry.cost === "number") {
+            const event = buildCompletionUsageEvent({
+              source: UsageEventSource.DocumentProcessing,
+              model: enrichmentModel,
+              usage: {
+                prompt_tokens: usageEntry.promptTokens,
+                completion_tokens: usageEntry.completionTokens,
+                total_tokens: usageEntry.totalTokens,
+                cost: usageEntry.cost,
+                cost_details:
+                  typeof usageEntry.upstreamCost === "number"
+                    ? { upstream_inference_cost: usageEntry.upstreamCost }
+                    : undefined,
+              },
+              meta: { docId, operation: "enrichment" },
+            });
+            if (event) {
+              statsWrites.push(recordUsageEvent(event));
+            }
+          }
         }
       });
+      if (statsWrites.length > 0) {
+        await Promise.all(statsWrites);
+      }
 
       try {
         await updateDocumentStatus(docId, "processing", {
@@ -928,41 +980,32 @@ export async function processMarkdownDocument(
       }
 
       // Track usage
-      if (batchResponse.usage) {
-        const usage: ProcessingUsage = {
-          model,
-          operation: "embedding",
-          promptTokens: batchResponse.usage.prompt_tokens,
-          totalTokens: batchResponse.usage.total_tokens,
-          timestamp: Date.now(),
-        };
-
-        // Calculate cost if we can get model pricing
-        try {
-          const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
-          const modelsResponse = await fetch(OPENROUTER_MODELS_URL, {
-            headers: { Accept: "application/json" },
-            cache: "no-store",
+      const usageEntry = buildProcessingUsage({
+        model,
+        operation: ProcessingUsageOperation.Embedding,
+        usage: batchResponse.usage,
+      });
+      if (usageEntry) {
+        usageEntries.push(usageEntry);
+        if (typeof usageEntry.cost === "number") {
+          const event = buildEmbeddingUsageEvent({
+            source: UsageEventSource.DocumentProcessing,
+            model,
+            usage: {
+              prompt_tokens: usageEntry.promptTokens,
+              total_tokens: usageEntry.totalTokens,
+              cost: usageEntry.cost,
+              cost_details:
+                typeof usageEntry.upstreamCost === "number"
+                  ? { upstream_inference_cost: usageEntry.upstreamCost }
+                  : undefined,
+            },
+            meta: { docId, operation: "embedding" },
           });
-
-          if (modelsResponse.ok) {
-            const modelsData = await modelsResponse.json();
-            const modelInfo = modelsData.data?.find(
-              (m: OpenRouterModel) => m.id === model,
-            );
-
-            if (modelInfo?.pricing && usage.totalTokens) {
-              const usdPerToken = getUsdPerToken(modelInfo.pricing, "prompt");
-              if (usdPerToken !== null) {
-                usage.costUsd = usage.totalTokens * usdPerToken;
-              }
-            }
+          if (event) {
+            await recordUsageEvent(event);
           }
-        } catch {
-          // Ignore pricing lookup errors
         }
-
-        usageEntries.push(usage);
       }
 
       // Cache new embeddings (flushes to disk)
@@ -1059,17 +1102,14 @@ export async function processMarkdownDocument(
     (sum, u) => sum + (u.totalTokens ?? 0),
     0,
   );
-  const totalCostUsd = usageEntries.reduce(
-    (sum, u) => sum + (u.costUsd ?? 0),
-    0,
-  );
+  const totalCost = usageEntries.reduce((sum, u) => sum + (u.cost ?? 0), 0);
 
   // Update metadata with chunk count and usage
   await updateDocumentStatus(docId, "completed", {
     chunkCount: chunks.length,
     processedAt: Date.now(),
     usage: usageEntries.length > 0 ? usageEntries : undefined,
-    totalCostUsd: totalCostUsd > 0 ? totalCostUsd : undefined,
+    totalCost: totalCost > 0 ? totalCost : undefined,
     totalTokens: totalTokens > 0 ? totalTokens : undefined,
   });
 }

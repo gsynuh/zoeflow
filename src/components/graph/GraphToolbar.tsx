@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Brain,
   Code,
   Database,
@@ -40,6 +41,7 @@ export type GraphToolbarProps = {
   onOpenTypeScriptPreview: () => void;
   onOpenVectorStore: () => void;
   onOpenModels: () => void;
+  onOpenUsageStats: () => void;
 };
 
 /**
@@ -68,6 +70,7 @@ export function GraphToolbar(props: GraphToolbarProps) {
     onOpenTypeScriptPreview,
     onOpenVectorStore,
     onOpenModels,
+    onOpenUsageStats,
   } = props;
 
   const [flowsOpen, setFlowsOpen] = useState(false);
@@ -133,6 +136,16 @@ export function GraphToolbar(props: GraphToolbarProps) {
         >
           <Brain className="h-4 w-4" />
           Models
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onOpenUsageStats}
+          aria-label="Usage stats"
+        >
+          <BarChart3 className="h-4 w-4" />
+          Stats
         </Button>
 
         <Separator orientation="vertical" className="h-6" />

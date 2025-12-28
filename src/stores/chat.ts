@@ -23,6 +23,8 @@ export type ChatMessageUsage = {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  cost?: number;
+  upstreamCost?: number;
 };
 
 export type ChatMessage = {
@@ -351,12 +353,19 @@ export function updateChatMessageUsage(
   id: string,
   usage: ChatMessageUsage,
 ) {
+  const threads = $chatThreads.get();
+  const thread = threads.find((entry) => entry.id === threadId);
+  const message = thread?.messages.find((entry) => entry.id === id);
+  if (!thread || !message) {
+    return;
+  }
+
   $chatThreads.set(
-    $chatThreads.get().map((thread) => {
-      if (thread.id !== threadId) return thread;
+    threads.map((entry) => {
+      if (entry.id !== threadId) return entry;
       return {
-        ...thread,
-        messages: thread.messages.map((message) => {
+        ...entry,
+        messages: entry.messages.map((message) => {
           if (message.id !== id) return message;
           return { ...message, usage, tokenCount: usage.totalTokens };
         }),
